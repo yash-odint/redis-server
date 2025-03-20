@@ -1,6 +1,6 @@
 const net = require("net");
 const logger = require("./logger")("server");
-const {parseCommand, executeCommand} = require("./core");
+const {parseCommand, executeCommand, init} = require("./core");
 
 const server = net.createServer();
 const port = 6379;
@@ -26,6 +26,7 @@ server.on("connection", (socket) => {
 
 
 server.listen(port, host, () => {
+    init();
     logger.log(`Server running on ${host}:${port}`);
 });
 

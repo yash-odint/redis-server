@@ -88,7 +88,12 @@ const parseCommand = (data) => {
     };
 };
 
+const init = () => {
+    logger.log("Persistence mode : 'in-memory'");
+}
+
 module.exports = {
+    init,
     parseCommand,
     executeCommand
 };
