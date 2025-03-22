@@ -1,4 +1,4 @@
-const logger = require("./logger")("core");
+const logger = require("./utils/logger")("core");
 
 const store = {};
 const expirationTime = {};
@@ -23,7 +23,6 @@ const commandHandlers = {
         }
         const [key, value] = args;
         store[key] = {type: "string", value};
-        logger.log(store[key].value);
         return "+OK\r\n";
     },
     GET : (args) => {
@@ -62,6 +61,26 @@ const commandHandlers = {
         expirationTime[key] = Date.now() + seconds * 1000;
 
         return ":1\r\n";
+    },
+    TTL : (args) => {
+        if(args.length < 1){
+            return "-ERR wrong number of arguments for 'ttl' command\r\n";
+        }
+
+        const [key] = args;
+
+        if(!store[key]){
+            return ":-2\r\n";
+        }
+
+        if(!expirationTime[key]){
+            return ":-1\r\n";
+        }
+
+        const timeInMiliseconds = expirationTime[key] - Date.now();
+        const ttl = Math.floor(timeInMiliseconds / 1000);
+        return ttl > 0 ? `:${ttl}\r\n` : ":-2\r\n";
+        
     },
     COMMAND : () => "+OK\r\n"
 };

@@ -1,5 +1,5 @@
 const net = require("net");
-const logger = require("./logger")("server");
+const logger = require("./utils/logger")("server");
 const {parseCommand, executeCommand, init} = require("./core");
 
 const server = net.createServer();
