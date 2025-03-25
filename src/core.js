@@ -82,6 +82,138 @@ const commandHandlers = {
         return ttl > 0 ? `:${ttl}\r\n` : ":-2\r\n";
         
     },
+    INCR : (args) => {
+        if(args.length < 1){
+            return "-ERR wrong number of arguments for 'incr' command\r\n";
+        }
+
+        const [key] = args;
+
+        if(!store[key]){
+            store[key] = {type: "string", value: "1"};
+            return ":1\r\n";
+        }
+
+        const value = parseInt(store[key].value, 10);
+
+        if(isNaN(value)) return "-ERR value is not an integer or out of range\r\n";
+        store[key].value = (value + 1).toString();
+        return `:${value + 1}\r\n`;
+    },
+    DECR : (args) => {
+        if(args.length < 1){
+            return "-ERR wrong number of arguments for 'incr' command\r\n";
+        }
+
+        const [key] = args;
+
+        if(!store[key]){
+            store[key] = {type: "string", value: "-1"};
+            return ":-1\r\n";
+        }
+
+        const value = parseInt(store[key].value, 10);
+
+        if(isNaN(value)) return "-ERR value is not an integer or out of range\r\n";
+        store[key].value = (value - 1).toString();
+        return `:${value - 1}\r\n`;
+    },
+    LPUSH : (args) => {
+        if(args.length < 2){
+            return "-ERR wrong number of arguments for 'lpush' command\r\n";
+        }
+
+        const [key, ...values] = args;
+        if(!store[key]){
+            store[key] = {type : "list", value : []};
+        }
+
+        if(store[key].type !== "list"){
+            return "-ERR wrong type of key\r\n";
+        }
+
+        store[key].value.unshift(...values);
+
+        return `:${store[key].value.length}\r\n`;
+
+    },
+    LRANGE : (args) => {
+        if(args.length < 3){
+            return "-ERR wrong number of arguments for 'lrange' command";
+        }
+
+        const [key, start, stop] = args;
+
+        if(checkExpiry(key) || !store[key] || store[key].type !== "list"){
+            return "$-1\r\n";
+        }
+
+        const list = store[key].value;
+        const startIndex = parseInt(start, 10);
+        const stopIndex = parseInt(stop, 10);
+        const range = list.slice(startIndex, stopIndex + 1);
+        
+        let response = `*${range.length}\r\n`;
+        range.forEach(item => {
+            response += `$${item.length}\r\n${item}\r\n`;
+        });
+
+        return response;
+
+    },
+    RPUSH : (args) => {
+        if(args.length < 2){
+            return "-ERR wrong number of arguments for 'rpush' command\r\n";
+        }
+
+        const [key, ...values] = args;
+        if(!store[key]){
+            store[key] = {type : "list", value : []};
+        }
+
+        if(store[key].type !== "list"){
+            return "-ERR wrong type of key\r\n";
+        }
+
+        store[key].value.push(...values);
+
+        return `:${store[key].value.length}\r\n`;
+
+    },
+    LPOP : (args) => {
+        if(args.length < 1){
+            return "-ERR wrong number of arguments for 'lpop' command\r\n";
+        }
+
+        const [key] = args;
+
+        if(checkExpiry(key) || !store[key] || store[key].type !== "list" || store[key].value.length === 0){
+            return "$-1\r\n";
+        }
+
+        const list = store[key].value;
+        const poppedValue = list.shift();
+
+        return `$${poppedValue.length}\r\n${poppedValue}\r\n`;
+
+    },
+    RPOP : (args) => {
+        if(args.length < 1){
+            return "-ERR wrong number of arguments for 'rpop' command\r\n";
+        }
+
+        const [key] = args;
+
+        if(checkExpiry(key) || !store[key] || store[key].type !== "list" || store[key].value.length === 0){
+            return "$-1\r\n";
+        }
+        
+        const list = store[key].value;
+        const poppedValue = list.pop();
+
+        return `$${poppedValue.length}\r\n${poppedValue}\r\n`;
+
+    },
     COMMAND : () => "+OK\r\n"
 };
 
