@@ -1,16 +1,16 @@
 const logger = require("./utils/logger")("core");
-
-const store = {};
-const expirationTime = {};
+const config = require("./config.json");
+const persistence = require("./persistence");
+const {store, expirationTimes} = persistence;
 
 const isExpired = (key) => {
-    return expirationTime[key] && expirationTime[key] < Date.now();
+    return expirationTimes[key] && expirationTimes[key] < Date.now();
 };
 
 const checkExpiry = (key) => {
     if(isExpired(key)){
         delete store[key];
-        delete expirationTime[key];
+        delete expirationTimes[key];
         return true;
     }
     return false;
@@ -44,7 +44,7 @@ const commandHandlers = {
         const [key] = args;
         if(store[key]){
             delete store[key];
-            delete expirationTime[key];
+            delete expirationTimes[key];
             return ":1\r\n";
         } else{
             return ":0\r\n";
@@ -58,7 +58,7 @@ const commandHandlers = {
         
         if(!store[key]) return ":0\r\n";
 
-        expirationTime[key] = Date.now() + seconds * 1000;
+        expirationTimes[key] = Date.now() + seconds * 1000;
 
         return ":1\r\n";
     },
@@ -73,11 +73,11 @@ const commandHandlers = {
             return ":-2\r\n";
         }
 
-        if(!expirationTime[key]){
+        if(!expirationTimes[key]){
             return ":-1\r\n";
         }
 
-        const timeInMiliseconds = expirationTime[key] - Date.now();
+        const timeInMiliseconds = expirationTimes[key] - Date.now();
         const ttl = Math.floor(timeInMiliseconds / 1000);
         return ttl > 0 ? `:${ttl}\r\n` : ":-2\r\n";
         
@@ -218,7 +218,6 @@ const commandHandlers = {
 };
 
 const executeCommand = (command, args) => {
-    logger.log("Received " + command);
     const handler = commandHandlers[command];
     if(!handler){
         return "-ERR unknown command\r\n";
@@ -240,7 +239,16 @@ const parseCommand = (data) => {
 };
 
 const init = () => {
-    logger.log("Persistence mode : 'in-memory'");
+    if(config.snapshot){
+        logger.log("Persistence mode : 'snapshot'");
+        persistence.loadSnapshotSync();
+
+        setInterval(async () => {
+            await persistence.saveSnapshot();
+        }, config.snapshotInterval)
+    } else{
+        logger.log("Persistence mode : 'in-memory'");
+    }
 }
 
 module.exports = {
