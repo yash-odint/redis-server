@@ -1,17 +1,17 @@
 {
-    "snapshot" : false,
-    "snapshotInterval" : 5000,
-    "appendonly" : false,
-    "aofCommands" : [
-        "SET",
-        "GET",
-        "DEL",
-        "EXPIRE",
-        "INCR",
-        "DECR",
-        "LPUSH",
-        "RPUSH",
-        "LPOP",
-        "RPOP"
-    ]
+  "snapshot": false,
+  "snapshotInterval": 5000,
+  "appendonly": false,
+  "aofCommands": [
+    "SET",
+    "GET",
+    "DEL",
+    "EXPIRE",
+    "INCR",
+    "DECR",
+    "LPUSH",
+    "RPUSH",
+    "LPOP",
+    "RPOP"
+  ]
 }
