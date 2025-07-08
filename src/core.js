@@ -1,4 +1,5 @@
 const logger = require("./utils/logger")("core");
+const { log } = require("console");
 const config = require("./config.json");
 const persistence = require("./persistence");
 const { store, expirationTimes } = persistence;
@@ -219,6 +220,18 @@ const commandHandlers = {
     return `$${poppedValue.length}\r\n${poppedValue}\r\n`;
   },
   COMMAND: () => "+OK\r\n",
+  AUTH: (args) => {
+    if (args.length < 1) {
+      return "-ERR wrong number of arguments for 'auth' command\r\n";
+    }
+
+    const [password] = args;
+
+    if (password !== config.password) {
+      return "-ERR invalid password\r\n";
+    }
+    return "+OK\r\n";
+  },
 };
 
 const executeCommand = (command, args, replayingFromAof = false) => {
