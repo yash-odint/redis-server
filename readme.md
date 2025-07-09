@@ -27,8 +27,8 @@
 ### 1. Clone the Repo
 
 ```bash
-git clone https://github.com/your-username/miniredis.git
-cd miniredis
+git clone https://github.com/yash-odint/redis-server.git
+cd redis-server
 ```
 
 ### 2. Run the Server
